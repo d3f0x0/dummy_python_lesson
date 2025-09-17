@@ -225,7 +225,7 @@ def fibonacci(n):
         fib_sequence.append(fib_sequence[i-1] + fib_sequence[i-2])
     return fib_sequence
 
-def decode_and_execute():
+def check_lesson():
     try:
         current_file = __file__
         
